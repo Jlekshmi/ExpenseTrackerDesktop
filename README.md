@@ -61,4 +61,4 @@ src/
 
 ## Related
 
-- [Expense Tracker Mobile](https://github.com/YOUR_USERNAME/ExpenseTracker) — React Native version
+- [Expense Tracker Mobile](https://github.com/Jlekshmi/ExpenseTracker) — React Native version
