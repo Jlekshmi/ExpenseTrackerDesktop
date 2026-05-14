@@ -1,73 +1,64 @@
-# React + TypeScript + Vite
+# Expense Tracker Desktop 💰
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A native Windows desktop app for tracking expenses, built with Electron + React + Vite.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+- Add expenses with title, amount, category, date and notes
+- Dashboard with total spent and category breakdown
+- View all expenses grouped by date
+- Delete expenses with confirmation
+- Data stored permanently on disk (survives restarts and updates)
+- Dark theme UI
 
-## React Compiler
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+- [Electron](https://www.electronjs.org/) — desktop app shell
+- [React](https://react.dev/) + [Vite](https://vite.dev/) — UI
+- [TypeScript](https://www.typescriptlang.org/) — type safety
+- `localStorage` — persistent storage
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+## Getting Started
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```bash
+npm install
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+**Run in dev mode (open two terminals):**
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Terminal 1:
+```bash
+npx vite
 ```
+
+Terminal 2:
+```bash
+$env:NODE_ENV="development"; npx electron .
+```
+
+## Build Installer
+
+```bash
+npm run dist
+```
+
+Output: `release/Expense Tracker Setup 1.0.0.exe`
+
+## Project Structure
+
+```
+electron/
+  main.ts             — Electron main process
+src/
+  App.tsx             — all screens (Home, Add, All Expenses)
+  App.css             — styles
+  hooks/
+    useExpenses.ts    — expense data logic with localStorage
+  theme.ts            — colors and categories
+  types.ts            — TypeScript types
+```
+
+## Related
+
+- [Expense Tracker Mobile](https://github.com/YOUR_USERNAME/ExpenseTracker) — React Native version
