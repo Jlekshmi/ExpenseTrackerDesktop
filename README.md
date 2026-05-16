@@ -14,11 +14,12 @@ A professional personal finance tracking desktop app built with Electron + React
 - **Persistent storage** — all data saved locally on disk, survives app restarts and updates
 - **Future year support** — current year and next year always available in sidebar
 
-## Screenshots
+<!-- ## Screenshots
 
 | Dark Theme | Light Theme | Add Transaction |
 |---|---|---|
 | ![Dark]c:\Users\jayal\AppData\Local\Packages\Microsoft.ScreenSketch_8wekyb3d8bbwe\TempState\Snips\Screenshot 2026-05-16 005923.png | ![Light]c:\Users\jayal\AppData\Local\Packages\Microsoft.ScreenSketch_8wekyb3d8bbwe\TempState\Snips\Screenshot 2026-05-16 005835.png | ![Add]c:\Users\jayal\AppData\Local\Packages\Microsoft.ScreenSketch_8wekyb3d8bbwe\TempState\Snips\Screenshot 2026-05-16 005958.png |
+-->
 
 ## Tech Stack
 
