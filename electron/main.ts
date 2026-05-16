@@ -5,11 +5,12 @@ const isDev = process.env.NODE_ENV === "development";
 
 function createWindow() {
   const win = new BrowserWindow({
-    width: 420,
+    width: 1280,
     height: 820,
-    resizable: false,
+    minWidth: 900,
+    minHeight: 600,
     backgroundColor: "#0C0E14",
-    title: "Expense Tracker",
+    title: "Finance Tracker",
     webPreferences: {
       nodeIntegration: false,
       contextIsolation: true,

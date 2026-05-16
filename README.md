@@ -1,23 +1,32 @@
-# Expense Tracker Desktop 💰
+# Finance Tracker Desktop 💰
 
-A native Windows desktop app for tracking expenses, built with Electron + React + Vite.
+A professional personal finance tracking desktop app built with Electron + React + Vite + TypeScript. Installable as a native Windows application.
 
 ## Features
 
-- Add expenses with title, amount, category, date and notes
-- Dashboard with total spent and category breakdown
-- View all expenses grouped by date
-- Delete expenses with confirmation
-- Data stored permanently on disk (survives restarts and updates)
-- Dark theme UI
+- **Month-by-month tracking** — navigate any month of any year via the sidebar
+- **Income & Expense transactions** — add date, description, category and amount per entry
+- **37 pre-loaded categories** — matching real-world Canadian personal finance (Rent, RRSP, TSFA, FHSA, Grocery, Health, etc.)
+- **Category manager** — add or remove categories anytime; changes reflect instantly in forms
+- **Yearly summary** — full year overview with income vs expenses per month and category breakdown
+- **Light & Dark theme** — toggle via the ☀️/🌙 button; preference saved across sessions
+- **Custom delete confirmation** — styled dialog instead of browser alert
+- **Persistent storage** — all data saved locally on disk, survives app restarts and updates
+- **Future year support** — current year and next year always available in sidebar
 
+## Screenshots
+
+| Dark Theme | Light Theme | Add Transaction |
+|---|---|---|
+| ![Dark](screenshots/dark.png) | ![Light](screenshots/light.png) | ![Add](screenshots/add.png) |
 
 ## Tech Stack
 
-- [Electron](https://www.electronjs.org/) — desktop app shell
-- [React](https://react.dev/) + [Vite](https://vite.dev/) — UI
-- [TypeScript](https://www.typescriptlang.org/) — type safety
-- `localStorage` — persistent storage
+- [Electron](https://www.electronjs.org/) v42 — native desktop shell
+- [React](https://react.dev/) v19 + [Vite](https://vite.dev/) v8 — UI framework
+- [TypeScript](https://www.typescriptlang.org/) — full type safety
+- `localStorage` — persistent data storage
+- [electron-builder](https://www.electron.build/) — Windows installer packaging
 
 ## Getting Started
 
@@ -25,19 +34,19 @@ A native Windows desktop app for tracking expenses, built with Electron + React 
 npm install
 ```
 
-**Run in dev mode (open two terminals):**
+**Run in dev mode (two terminals):**
 
-Terminal 1:
+Terminal 1 — start Vite dev server:
 ```bash
 npx vite
 ```
 
-Terminal 2:
-```bash
+Terminal 2 — launch Electron (after Terminal 1 is ready):
+```powershell
 $env:NODE_ENV="development"; npx electron .
 ```
 
-## Build Installer
+## Build Windows Installer
 
 ```bash
 npm run dist
@@ -45,20 +54,46 @@ npm run dist
 
 Output: `release/Expense Tracker Setup 1.0.0.exe`
 
+Share the `.exe` directly — recipients double-click to install, no other setup needed.
+
+## Branch Strategy
+
+```
+main          ← stable releases
+develop       ← integration branch
+feature/*     ← individual features
+```
+
 ## Project Structure
 
 ```
 electron/
-  main.ts             — Electron main process
+  main.ts                   — Electron main process (window, loading)
 src/
-  App.tsx             — all screens (Home, Add, All Expenses)
-  App.css             — styles
+  App.tsx                   — root layout, theme management, routing
+  App.css                   — all styles with CSS variables for theming
+  index.css                 — global reset and CSS variable definitions
+  types.ts                  — shared TypeScript types
+  constants/
+    seedCategories.ts       — 37 default categories seeded on first launch
   hooks/
-    useExpenses.ts    — expense data logic with localStorage
-  theme.ts            — colors and categories
-  types.ts            — TypeScript types
+    useTransactions.ts      — transaction CRUD with localStorage
+    useCategories.ts        — category CRUD with localStorage + seeding
+  components/
+    Sidebar.tsx             — year/month navigation, theme toggle
+    MonthView.tsx           — transaction table with search, edit, delete
+    YearlySummary.tsx       — yearly income/expense/net breakdown
+    AddTransactionModal.tsx — add/edit transaction form
+    CategoryManager.tsx     — manage expense and income categories
+    ConfirmDialog.tsx       — custom styled delete confirmation dialog
 ```
+
+## Categories
+
+**Expense (34):** Rent, Subscription, Loan, Amazon, Uber Eats, Grocery, Restaurants, Car Parking, Petrol, Office Supplies, Insurance, Hydro, Health, Mobile, Home Support, Internet, 401 Highway, Other, Shopping, Trip, Charity, Car Service, Sports, Tax, Auctions, Savings, Beauty, Tim Hortens, RRSP, TSFA, FHSA, Iphone, Entertainment
+
+**Income (3):** Salary, Canada Carbon Rebate, Carry Fwd
 
 ## Related
 
-- [Expense Tracker Mobile](https://github.com/Jlekshmi/ExpenseTracker) — React Native version
+- [Expense Tracker Mobile](https://github.com/Jlekshmi/ExpenseTracker) — React Native version for iOS & Android
