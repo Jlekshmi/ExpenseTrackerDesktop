@@ -1,10 +1,18 @@
-export type Expense = {
+export type CategoryType = "income" | "expense";
+
+export type Category = {
   id: string;
-  title: string;
-  amount: number;
-  category: string;
-  note: string;
-  date: string;
+  name: string;
+  type: CategoryType;
 };
 
-export type NewExpense = Omit<Expense, "id">;
+export type Transaction = {
+  id: string;
+  date: string;
+  description: string;
+  categoryId: string;
+  amount: number;
+  type: CategoryType;
+  year: number;
+  month: number;
+};
