@@ -593,6 +593,104 @@ select.input { cursor: pointer; }
 }
 .cat-item:hover { background: var(--bg-hover); }
 
+/* ── OUTLINE BUTTON ──────────────────────────────────── */
+.btn-outline {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-weight: 600;
+  font-family: inherit;
+  padding: 9px 16px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-outline:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ── IMPORT MODAL ────────────────────────────────────── */
+.import-modal { width: 580px; }
+
+.import-format-box {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.import-note { font-size: 13px; color: var(--text-muted); }
+.import-hint { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+.format-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+.format-table th {
+  background: var(--bg-card);
+  padding: 7px 10px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  border-bottom: 1px solid var(--border);
+}
+.format-table td {
+  padding: 7px 10px;
+  color: var(--text);
+  border-bottom: 1px solid var(--border);
+}
+.format-table tr:last-child td { border-bottom: none; }
+
+.import-select-btn { width: 100%; padding: 12px; font-size: 14px; }
+.import-loading { text-align: center; color: var(--text-muted); padding: 16px; font-size: 13px; }
+.import-filename { font-size: 12px; color: var(--text-muted); }
+
+.import-stats {
+  display: flex;
+  gap: 16px;
+}
+
+.import-stat {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  gap: 4px;
+}
+
+.import-stat.success { border-color: var(--income); background: color-mix(in srgb, var(--income) 8%, transparent); }
+.import-stat.warn    { border-color: var(--border); }
+
+.import-stat-num   { font-size: 28px; font-weight: 800; color: var(--text); }
+.import-stat.success .import-stat-num { color: var(--income); }
+.import-stat-label { font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
+
+.import-errors {
+  background: color-mix(in srgb, var(--expense) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--expense) 30%, transparent);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.import-errors-title { font-size: 12px; font-weight: 700; color: var(--expense); margin-bottom: 6px; }
+.import-errors-list { display: flex; flex-direction: column; gap: 3px; max-height: 120px; overflow-y: auto; }
+.import-errors-list p { font-size: 12px; color: var(--text-muted); }
+
+.import-done {
+  align-items: center;
+  text-align: center;
+  padding: 32px 24px;
+}
+.done-icon   { font-size: 40px; }
+.import-done h3 { font-size: 18px; font-weight: 700; color: var(--text); }
+.import-done p  { font-size: 14px; color: var(--text-muted); margin-top: 6px; }
+
 /* ── COLORS ──────────────────────────────────────────── */
 .income  { color: var(--income); }
 .expense { color: var(--expense); }

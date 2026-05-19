@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Category, Transaction } from "../types";
 import { AddTransactionModal } from "./AddTransactionModal";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { ImportModal } from "./ImportModal";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -34,6 +35,7 @@ type Props = {
 
 export function MonthView({ year, month, transactions, categories, onAdd, onUpdate, onDelete }: Props) {
   const [showAdd, setShowAdd] = useState(false);
+  const [showImport, setShowImport] = useState(false);
   const [editing, setEditing] = useState<Transaction | null>(null);
   const [deleting, setDeleting] = useState<Transaction | null>(null);
   const [search, setSearch] = useState("");
@@ -99,6 +101,7 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+        <button className="btn-outline" onClick={() => setShowImport(true)}>⬆ Import Excel</button>
       </div>
 
       <div className="table-wrapper">
@@ -167,6 +170,14 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
           message={`Are you sure you want to delete "${deleting.description || deleting.categoryId}"? This cannot be undone.`}
           onConfirm={() => { onDelete(deleting.id); setDeleting(null); }}
           onCancel={() => setDeleting(null)}
+        />
+      )}
+
+      {showImport && (
+        <ImportModal
+          categories={categories}
+          onImport={(txs) => { txs.forEach((t) => onAdd(t)); }}
+          onClose={() => setShowImport(false)}
         />
       )}
     </div>
