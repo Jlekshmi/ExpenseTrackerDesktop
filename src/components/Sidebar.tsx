@@ -10,16 +10,14 @@ type Props = {
   theme: "dark" | "light";
   onSelect: (v: View) => void;
   onThemeToggle: () => void;
+  onImport: () => void;
 };
 
-export function Sidebar({ transactions, view, theme, onSelect, onThemeToggle }: Props) {
+export function Sidebar({ transactions, view, theme, onSelect, onThemeToggle, onImport }: Props) {
   const currentYear = new Date().getFullYear();
-
-  // Always include current year, next year, and any year that has data
   const dataYears = transactions.map((t) => t.year);
   const yearSet = new Set([...dataYears, currentYear, currentYear + 1]);
   const years = Array.from(yearSet).sort((a, b) => b - a);
-
   const selectedYear = view.type === "categories" ? currentYear : view.year;
 
   const handleYearChange = (y: number) => {
@@ -29,7 +27,7 @@ export function Sidebar({ transactions, view, theme, onSelect, onThemeToggle }: 
   return (
     <aside className="sidebar">
       <div className="sidebar-logo">
-        <span className="logo-icon">💰</span>
+        <span className="logo-icon">&#128176;</span>
         <span className="logo-text">Finance Tracker</span>
         <button className="theme-toggle" onClick={onThemeToggle} title="Toggle theme">
           {theme === "dark" ? "☀️" : "🌙"}
@@ -73,13 +71,20 @@ export function Sidebar({ transactions, view, theme, onSelect, onThemeToggle }: 
           className={`sidebar-item ${view.type === "yearly" ? "active" : ""}`}
           onClick={() => onSelect({ type: "yearly", year: selectedYear })}
         >
-          📊 Yearly Summary
+          &#128202; Yearly Summary
         </button>
         <button
           className={`sidebar-item ${view.type === "categories" ? "active" : ""}`}
           onClick={() => onSelect({ type: "categories" })}
         >
-          🏷️ Categories
+          &#127991; Categories
+        </button>
+      </div>
+
+      <div className="sidebar-section">
+        <div className="sidebar-label">Data</div>
+        <button className="sidebar-import-btn" onClick={onImport}>
+          &#11014; Import Excel
         </button>
       </div>
     </aside>

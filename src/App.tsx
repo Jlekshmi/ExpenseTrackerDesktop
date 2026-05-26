@@ -3,6 +3,7 @@ import { Sidebar } from "./components/Sidebar";
 import { MonthView } from "./components/MonthView";
 import { YearlySummary } from "./components/YearlySummary";
 import { CategoryManager } from "./components/CategoryManager";
+import { ImportModal } from "./components/ImportModal";
 import { useTransactions } from "./hooks/useTransactions";
 import { useCategories } from "./hooks/useCategories";
 import "./App.css";
@@ -22,6 +23,7 @@ export default function App() {
   const now = new Date();
   const [view, setView] = useState<View>({ type: "month", year: now.getFullYear(), month: now.getMonth() });
   const [theme, setTheme] = useState<Theme>(getSavedTheme);
+  const [showImport, setShowImport] = useState(false);
 
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
   const { categories, addCategory, deleteCategory } = useCategories();
@@ -33,6 +35,10 @@ export default function App() {
 
   const toggleTheme = () => setTheme((t) => t === "dark" ? "light" : "dark");
 
+  const handleImport = (txs: Omit<import("./types").Transaction, "id">[]) => {
+    txs.forEach((t) => addTransaction(t));
+  };
+
   return (
     <div className="layout">
       <Sidebar
@@ -41,6 +47,7 @@ export default function App() {
         theme={theme}
         onSelect={setView}
         onThemeToggle={toggleTheme}
+        onImport={() => setShowImport(true)}
       />
       <main className="content-area">
         {view.type === "month" && (
@@ -69,6 +76,14 @@ export default function App() {
           />
         )}
       </main>
+
+      {showImport && (
+        <ImportModal
+          categories={categories}
+          onImport={handleImport}
+          onClose={() => setShowImport(false)}
+        />
+      )}
     </div>
   );
 }

@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import type { Category, Transaction } from "../types";
 import { AddTransactionModal } from "./AddTransactionModal";
 import { ConfirmDialog } from "./ConfirmDialog";
-import { ImportModal } from "./ImportModal";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -22,6 +21,17 @@ const TrashIcon = () => (
   </svg>
 );
 
+const ChevronDown = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="6 9 12 15 18 9"/>
+  </svg>
+);
+
+const ChevronUp = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="18 15 12 9 6 15"/>
+  </svg>
+);
 
 type Props = {
   year: number;
@@ -33,12 +43,29 @@ type Props = {
   onDelete: (id: string) => void;
 };
 
+// Assign a colour dot to each category based on its name
+const CAT_COLORS: Record<string, string> = {
+  rent:"#4ECDC4", subscription:"#C7A6FF", loan:"#FF9A3C", amazon:"#FFE66D",
+  ubereats:"#FF6B6B", grocery:"#A8E6CF", restaurants:"#FF8B94", carparking:"#B2BEC3",
+  petrol:"#74B9FF", officesupplies:"#DFE6E9", insurance:"#FDCB6E", hydro:"#81ECEC",
+  health:"#FF7675", mobile:"#6C5CE7", homesupport:"#E17055", internet:"#00CEC9",
+  highway401:"#636E72", other:"#B2BEC3", shopping:"#FD79A8", trip:"#55EFC4",
+  charity:"#FAB1A0", carservice:"#74B9FF", sports:"#00B894", tax:"#D63031",
+  auctions:"#E84393", savings:"#34EAA0", beauty:"#FD79A8", timhortens:"#D35400",
+  rrsp:"#2980B9", tsfa:"#27AE60", fhsa:"#8E44AD", iphone:"#636E72",
+  entertainment:"#9B59B6", salary:"#34EAA0", carboncrebate:"#00B894", carryfwd:"#74B9FF",
+};
+
+function getCatColor(catId: string): string {
+  return CAT_COLORS[catId.toLowerCase()] ?? "#B2BEC3";
+}
+
 export function MonthView({ year, month, transactions, categories, onAdd, onUpdate, onDelete }: Props) {
-  const [showAdd, setShowAdd] = useState(false);
-  const [showImport, setShowImport] = useState(false);
-  const [editing, setEditing] = useState<Transaction | null>(null);
-  const [deleting, setDeleting] = useState<Transaction | null>(null);
-  const [search, setSearch] = useState("");
+  const [showAdd, setShowAdd]         = useState(false);
+  const [editing, setEditing]         = useState<Transaction | null>(null);
+  const [deleting, setDeleting]       = useState<Transaction | null>(null);
+  const [search, setSearch]           = useState("");
+  const [showSummary, setShowSummary] = useState(true);
 
   const monthTx = useMemo(() =>
     transactions
@@ -62,11 +89,27 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
     return { income, expense, net: income - expense };
   }, [monthTx]);
 
+  // Aggregate by category
+  const { expenseGroups, incomeGroups } = useMemo(() => {
+    const map = new Map<string, { cat: Category | undefined; total: number; count: number; type: string }>();
+    monthTx.forEach((t) => {
+      const ex = map.get(t.categoryId);
+      if (ex) { ex.total += t.amount; ex.count++; }
+      else map.set(t.categoryId, { cat: categories.find((c) => c.id === t.categoryId), total: t.amount, count: 1, type: t.type });
+    });
+    const all = Array.from(map.values()).filter((r) => r.total > 0).sort((a, b) => b.total - a.total);
+    return {
+      expenseGroups: all.filter((r) => r.type === "expense"),
+      incomeGroups:  all.filter((r) => r.type === "income"),
+    };
+  }, [monthTx, categories]);
+
   const getCat = (id: string) => categories.find((c) => c.id === id);
   const fmt = (n: number) => n.toLocaleString("en-CA", { minimumFractionDigits: 2 });
 
   return (
     <div className="main-content">
+      {/* Header */}
       <div className="page-header">
         <div className="page-header-left">
           <h1>{MONTHS[month]} {year}</h1>
@@ -75,6 +118,7 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
         <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Transaction</button>
       </div>
 
+      {/* Summary bar */}
       <div className="summary-bar">
         <div className="summary-stat">
           <span className="stat-label">Total Income</span>
@@ -94,14 +138,19 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
         </div>
       </div>
 
+      {/* Search + Table */}
       <div className="table-toolbar">
-        <input
-          className="search-input"
-          placeholder="Search description or category..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <button className="btn-outline" onClick={() => setShowImport(true)}>⬆ Import Excel</button>
+        <div className="search-wrap">
+          <input
+            className="search-input"
+            placeholder="Search description or category..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
+          {search && (
+            <button className="search-clear" onClick={() => setSearch("")} title="Clear">✕</button>
+          )}
+        </div>
       </div>
 
       <div className="table-wrapper">
@@ -118,23 +167,22 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
           </thead>
           <tbody>
             {filtered.length === 0 ? (
-              <tr>
-                <td colSpan={6} className="empty-row">
-                  {monthTx.length === 0
-                    ? "No transactions yet — click '+ Add Transaction' to start"
-                    : "No results found"}
-                </td>
-              </tr>
+              <tr><td colSpan={6} className="empty-row">
+                {monthTx.length === 0 ? "No transactions yet — click '+ Add Transaction' to start" : "No results found"}
+              </td></tr>
             ) : (
               filtered.map((t) => {
                 const cat = getCat(t.categoryId);
                 return (
                   <tr key={t.id} className="tx-row">
-                    <td className="date-cell">
-                      {new Date(t.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}
-                    </td>
+                    <td className="date-cell">{new Date(t.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}</td>
                     <td className="desc-cell">{t.description || <span className="muted">—</span>}</td>
-                    <td><span className="cat-badge">{cat?.name ?? "—"}</span></td>
+                    <td>
+                      <span className="cat-badge">
+                        <span className="cat-dot" style={{ background: getCatColor(t.categoryId) }} />
+                        {cat?.name ?? "—"}
+                      </span>
+                    </td>
                     <td><span className={`type-badge ${t.type}`}>{t.type === "income" ? "Income" : "Expense"}</span></td>
                     <td className={`amount-cell text-right ${t.type}`}>
                       {t.type === "expense" ? "-" : "+"}${fmt(t.amount)}
@@ -151,15 +199,57 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
         </table>
       </div>
 
+      {/* Category breakdown — collapsible, below table, full width */}
+      {monthTx.length > 0 && (
+        <div className="cat-breakdown-section">
+          <button className="cat-breakdown-toggle" onClick={() => setShowSummary((v) => !v)}>
+            <span>Category Breakdown</span>
+            <span className="cat-breakdown-meta">
+              {expenseGroups.length} expense · {incomeGroups.length} income categories
+            </span>
+            <span className="cat-breakdown-chevron">{showSummary ? <ChevronUp /> : <ChevronDown />}</span>
+          </button>
+
+          {showSummary && (
+            <div className="cat-breakdown-grid">
+              {/* Expenses */}
+              <div className="cat-breakdown-col">
+                <div className="cat-breakdown-col-header expense">Expense Categories</div>
+                {expenseGroups.map(({ cat, total, count }) => (
+                  <div key={cat?.id ?? "unk"} className="cat-breakdown-row">
+                    <span className="cat-dot" style={{ background: getCatColor(cat?.id ?? "") }} />
+                    <span className="cat-breakdown-name">{cat?.name ?? "Unknown"}</span>
+                    {count > 1 && <span className="cat-count">{count}x</span>}
+                    <span className="cat-breakdown-amount expense">${fmt(total)}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Income */}
+              <div className="cat-breakdown-col">
+                <div className="cat-breakdown-col-header income">Income Categories</div>
+                {incomeGroups.length === 0
+                  ? <p className="cat-breakdown-empty">No income recorded</p>
+                  : incomeGroups.map(({ cat, total, count }) => (
+                    <div key={cat?.id ?? "unk"} className="cat-breakdown-row">
+                      <span className="cat-dot" style={{ background: getCatColor(cat?.id ?? "") }} />
+                      <span className="cat-breakdown-name">{cat?.name ?? "Unknown"}</span>
+                      {count > 1 && <span className="cat-count">{count}x</span>}
+                      <span className="cat-breakdown-amount income">${fmt(total)}</span>
+                    </div>
+                  ))
+                }
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {(showAdd || editing) && (
         <AddTransactionModal
-          year={year}
-          month={month}
-          categories={categories}
+          year={year} month={month} categories={categories}
           initial={editing ?? undefined}
-          onSave={editing
-            ? (data) => { onUpdate(editing.id, data); setEditing(null); }
-            : onAdd}
+          onSave={editing ? (data) => { onUpdate(editing.id, data); setEditing(null); } : onAdd}
           onClose={() => { setShowAdd(false); setEditing(null); }}
         />
       )}
@@ -170,14 +260,6 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
           message={`Are you sure you want to delete "${deleting.description || deleting.categoryId}"? This cannot be undone.`}
           onConfirm={() => { onDelete(deleting.id); setDeleting(null); }}
           onCancel={() => setDeleting(null)}
-        />
-      )}
-
-      {showImport && (
-        <ImportModal
-          categories={categories}
-          onImport={(txs) => { txs.forEach((t) => onAdd(t)); }}
-          onClose={() => setShowImport(false)}
         />
       )}
     </div>

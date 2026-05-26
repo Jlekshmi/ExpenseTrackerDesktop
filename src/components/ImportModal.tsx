@@ -11,8 +11,8 @@ type Props = {
 type Step = "select" | "preview" | "done";
 
 export function ImportModal({ categories, onImport, onClose }: Props) {
-  const [step, setStep] = useState<Step>("select");
-  const [result, setResult] = useState<ImportResult | null>(null);
+  const [step, setStep]       = useState<Step>("select");
+  const [result, setResult]   = useState<ImportResult | null>(null);
   const [fileName, setFileName] = useState("");
   const [loading, setLoading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -37,6 +37,7 @@ export function ImportModal({ categories, onImport, onClose }: Props) {
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal import-modal" onClick={(e) => e.stopPropagation()}>
+
         <div className="modal-header">
           <h2>Import from Excel</h2>
           <button className="modal-close" onClick={onClose}>✕</button>
@@ -46,35 +47,22 @@ export function ImportModal({ categories, onImport, onClose }: Props) {
         {step === "select" && (
           <div className="modal-body">
             <div className="import-format-box">
-              <p className="import-note">Your Excel file should have these columns:</p>
+              <p className="import-note">Expected column headers in your Excel:</p>
               <table className="format-table">
                 <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th>Category</th>
-                    <th>Amount</th>
-                    <th>Type</th>
-                  </tr>
+                  <tr><th>Date</th><th>Description</th><th>Category</th><th>Amount</th><th>Type</th></tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>2026-01-15</td>
-                    <td>North Dental</td>
-                    <td>Health</td>
-                    <td>88.00</td>
-                    <td>Expense</td>
-                  </tr>
-                  <tr>
-                    <td>2026-01-31</td>
-                    <td>Payroll</td>
-                    <td>Salary</td>
-                    <td>10353</td>
-                    <td>Income</td>
-                  </tr>
+                  <tr><td>2026-01-15</td><td>North Dental</td><td>Health</td><td>88.00</td><td>Expense</td></tr>
+                  <tr><td>2026-01-31</td><td>Payroll</td><td>Salary</td><td>10353</td><td>Income</td></tr>
                 </tbody>
               </table>
-              <p className="import-hint">Category names must match your existing categories. Type defaults to "Expense" if not provided.</p>
+              <ul className="import-hints">
+                <li>Multiple months in one file — all will be imported to correct months automatically</li>
+                <li>Multiple sheets — all sheets will be read</li>
+                <li>Category names must match your existing categories exactly</li>
+                <li>Type defaults to <strong>Expense</strong> if not provided</li>
+              </ul>
             </div>
 
             <input
@@ -85,23 +73,28 @@ export function ImportModal({ categories, onImport, onClose }: Props) {
               onChange={handleFile}
             />
 
-            {loading ? (
-              <div className="import-loading">Reading file...</div>
-            ) : (
-              <button className="btn-primary import-select-btn" onClick={() => fileRef.current?.click()}>
-                Choose Excel File
-              </button>
-            )}
+            {loading
+              ? <div className="import-loading">⏳ Reading file, please wait...</div>
+              : <button className="btn-primary import-select-btn" onClick={() => fileRef.current?.click()}>
+                  Choose Excel File (.xlsx / .xls / .csv)
+                </button>
+            }
           </div>
         )}
 
-        {/* ── STEP 2: Preview Results ── */}
+        {/* ── STEP 2: Preview ── */}
         {step === "preview" && result && (
           <div className="modal-body">
+            <p className="import-filename">📄 {fileName}</p>
+
             <div className="import-stats">
               <div className="import-stat success">
                 <span className="import-stat-num">{result.imported.length}</span>
                 <span className="import-stat-label">Ready to import</span>
+              </div>
+              <div className="import-stat neutral">
+                <span className="import-stat-num">{result.monthGroups.length}</span>
+                <span className="import-stat-label">Months found</span>
               </div>
               <div className="import-stat warn">
                 <span className="import-stat-num">{result.skipped}</span>
@@ -109,20 +102,34 @@ export function ImportModal({ categories, onImport, onClose }: Props) {
               </div>
             </div>
 
-            <p className="import-filename">📄 {fileName}</p>
+            {/* Month breakdown */}
+            {result.monthGroups.length > 0 && (
+              <div className="month-breakdown">
+                <p className="import-section-label">Data will be imported into:</p>
+                <div className="month-breakdown-grid">
+                  {result.monthGroups.map((g) => (
+                    <div key={`${g.year}-${g.month}`} className="month-chip">
+                      <span className="month-chip-label">{g.label}</span>
+                      <span className="month-chip-count">{g.count} rows</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
+            {/* Errors */}
             {result.errors.length > 0 && (
               <div className="import-errors">
-                <p className="import-errors-title">⚠️ Issues found ({result.errors.length}):</p>
+                <p className="import-errors-title">⚠️ {result.errors.length} issue{result.errors.length !== 1 ? "s" : ""} found (rows will be skipped):</p>
                 <div className="import-errors-list">
-                  {result.errors.slice(0, 8).map((e, i) => <p key={i}>{e}</p>)}
-                  {result.errors.length > 8 && <p>...and {result.errors.length - 8} more</p>}
+                  {result.errors.slice(0, 6).map((e, i) => <p key={i}>{e}</p>)}
+                  {result.errors.length > 6 && <p>...and {result.errors.length - 6} more</p>}
                 </div>
               </div>
             )}
 
             {result.imported.length === 0 && (
-              <p className="error-text">No valid transactions found. Check the issues above.</p>
+              <p className="error-text">No valid transactions found. Check the issues above or verify your column names.</p>
             )}
           </div>
         )}
@@ -132,30 +139,23 @@ export function ImportModal({ categories, onImport, onClose }: Props) {
           <div className="modal-body import-done">
             <div className="done-icon">✅</div>
             <h3>Import Complete!</h3>
-            <p>{result.imported.length} transaction{result.imported.length !== 1 ? "s" : ""} added successfully.</p>
+            <p>{result.imported.length} transaction{result.imported.length !== 1 ? "s" : ""} imported across {result.monthGroups.length} month{result.monthGroups.length !== 1 ? "s" : ""}.</p>
           </div>
         )}
 
         <div className="modal-footer">
-          {step === "select" && (
-            <button className="btn-secondary" onClick={onClose}>Cancel</button>
-          )}
+          {step === "select" && <button className="btn-secondary" onClick={onClose}>Cancel</button>}
           {step === "preview" && (
             <>
-              <button className="btn-secondary" onClick={() => setStep("select")}>← Back</button>
-              <button
-                className="btn-primary"
-                onClick={handleConfirm}
-                disabled={!result || result.imported.length === 0}
-              >
-                Import {result?.imported.length} Transactions
+              <button className="btn-secondary" onClick={() => { setStep("select"); setResult(null); }}>← Back</button>
+              <button className="btn-primary" onClick={handleConfirm} disabled={!result || result.imported.length === 0}>
+                Import {result?.imported.length ?? 0} Transactions
               </button>
             </>
           )}
-          {step === "done" && (
-            <button className="btn-primary" onClick={onClose}>Done</button>
-          )}
+          {step === "done" && <button className="btn-primary" onClick={onClose}>Done</button>}
         </div>
+
       </div>
     </div>
   );
