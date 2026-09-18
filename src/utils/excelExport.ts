@@ -78,3 +78,93 @@ export function exportYearToExcel(year: number, transactions: Transaction[], cat
 
   XLSX.writeFile(wb, `Finance_Tracker_${year}.xlsx`);
 }
+
+export function exportMonthToExcel(year: number, month: number, transactions: Transaction[], categories: Category[]) {
+  const wb = XLSX.utils.book_new();
+  const monthTx = transactions
+    .filter((t) => t.year === year && t.month === month)
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const monthLabel = `${MONTHS[month]}_${year}`;
+  const fmt = (n: number) => parseFloat(n.toFixed(2));
+
+  // ── Totals ────────────────────────────────────────────
+  const totalIncome  = monthTx.filter((t) => t.type === "income").reduce((s, t) => s + t.amount, 0);
+  const totalExpense = monthTx.filter((t) => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+  const netSavings   = totalIncome - totalExpense;
+
+  // ── Sheet 1: Transactions ─────────────────────────────
+  const txRows = monthTx.map((t) => {
+    const cat = categories.find((c) => c.id === t.categoryId);
+    const d = new Date(t.date);
+    return {
+      Date: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+      Description: t.description || "",
+      Category: cat?.name ?? t.categoryId,
+      Amount: t.amount,
+      Type: t.type === "income" ? "Income" : "Expense",
+    };
+  });
+
+  // Append blank + summary rows at the bottom
+  const ws1 = XLSX.utils.json_to_sheet(
+    txRows.length > 0 ? txRows : [{ Date: "", Description: "", Category: "", Amount: "", Type: "" }]
+  );
+
+  const summaryStart = txRows.length + 2; // +1 header, +1 blank gap
+  XLSX.utils.sheet_add_aoa(ws1, [
+    [],
+    ["", "", "Total Income",   fmt(totalIncome),  ""],
+    ["", "", "Total Expenses", fmt(totalExpense), ""],
+    ["", "", "Net Savings",    fmt(netSavings),   ""],
+  ], { origin: { r: summaryStart, c: 0 } });
+
+  ws1["!cols"] = [{ wch: 12 }, { wch: 30 }, { wch: 18 }, { wch: 12 }, { wch: 10 }];
+  XLSX.utils.book_append_sheet(wb, ws1, "Transactions");
+
+  // ── Sheet 2: Category Breakdown ───────────────────────
+  const catMap = new Map<string, { name: string; income: number; expense: number }>();
+  monthTx.forEach((t) => {
+    const cat = categories.find((c) => c.id === t.categoryId);
+    const name = cat?.name ?? t.categoryId;
+    const ex = catMap.get(t.categoryId) ?? { name, income: 0, expense: 0 };
+    if (t.type === "income") ex.income += t.amount; else ex.expense += t.amount;
+    catMap.set(t.categoryId, ex);
+  });
+
+  const allCats = Array.from(catMap.values()).filter((r) => r.income > 0 || r.expense > 0);
+  const expenseCats = allCats.filter((r) => r.expense > 0).sort((a, b) => b.expense - a.expense);
+  const incomeCats  = allCats.filter((r) => r.income  > 0).sort((a, b) => b.income  - a.income);
+
+  // Build AOA: mirrors the app layout
+  const aoa: (string | number)[][] = [];
+
+  // ── Summary bar (mirrors app header) ──────────────────
+  aoa.push([`${MONTHS[month]} ${year} — Monthly Summary`]);
+  aoa.push([]);
+  aoa.push(["", "Total Income",   "Total Expenses", "Net Savings"]);
+  aoa.push(["", fmt(totalIncome), fmt(totalExpense), fmt(netSavings)]);
+  aoa.push([]);
+  aoa.push([]);
+
+  // ── Income categories ─────────────────────────────────
+  aoa.push(["Income Categories", "Amount"]);
+  if (incomeCats.length === 0) {
+    aoa.push(["No income recorded", ""]);
+  } else {
+    incomeCats.forEach((r) => aoa.push([r.name, fmt(r.income)]));
+  }
+  aoa.push(["Total Income", fmt(totalIncome)]);
+  aoa.push([]);
+
+  // ── Expense categories ────────────────────────────────
+  aoa.push(["Expense Categories", "Amount"]);
+  expenseCats.forEach((r) => aoa.push([r.name, fmt(r.expense)]));
+  aoa.push(["Total Expenses", fmt(totalExpense)]);
+
+  const ws2 = XLSX.utils.aoa_to_sheet(aoa);
+  ws2["!cols"] = [{ wch: 24 }, { wch: 16 }, { wch: 16 }, { wch: 14 }];
+  XLSX.utils.book_append_sheet(wb, ws2, "Summary");
+
+  XLSX.writeFile(wb, `Finance_Tracker_${monthLabel}.xlsx`);
+}

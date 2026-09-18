@@ -35,6 +35,14 @@ export function useCategories() {
     });
   }, []);
 
+  const updateCategory = useCallback((id: string, name: string, type: CategoryType) => {
+    setCategories((prev) => {
+      const updated = prev.map((c) => c.id === id ? { ...c, name: name.trim(), type } : c);
+      save(updated);
+      return updated;
+    });
+  }, []);
+
   const deleteCategory = useCallback((id: string) => {
     setCategories((prev) => {
       const updated = prev.filter((c) => c.id !== id);
@@ -43,5 +51,5 @@ export function useCategories() {
     });
   }, []);
 
-  return { categories, addCategory, deleteCategory };
+  return { categories, addCategory, updateCategory, deleteCategory };
 }

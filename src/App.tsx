@@ -26,7 +26,7 @@ export default function App() {
   const [showImport, setShowImport] = useState(false);
 
   const { transactions, addTransaction, updateTransaction, deleteTransaction } = useTransactions();
-  const { categories, addCategory, deleteCategory } = useCategories();
+  const { categories, addCategory, updateCategory, deleteCategory } = useCategories();
 
   useEffect(() => {
     document.documentElement.setAttribute("data-theme", theme);
@@ -72,6 +72,7 @@ export default function App() {
           <CategoryManager
             categories={categories}
             onAdd={addCategory}
+            onUpdate={updateCategory}
             onDelete={deleteCategory}
           />
         )}

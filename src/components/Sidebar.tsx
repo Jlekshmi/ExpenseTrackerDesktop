@@ -2,6 +2,13 @@ import type { Transaction } from "../types";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
+const TagIcon = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+    <line x1="7" y1="7" x2="7.01" y2="7"/>
+  </svg>
+);
+
 type View = { type: "month"; year: number; month: number } | { type: "yearly"; year: number } | { type: "categories" };
 
 type Props = {
@@ -71,13 +78,13 @@ export function Sidebar({ transactions, view, theme, onSelect, onThemeToggle, on
           className={`sidebar-item ${view.type === "yearly" ? "active" : ""}`}
           onClick={() => onSelect({ type: "yearly", year: selectedYear })}
         >
-          &#128202; Yearly Summary
+          <span className="sidebar-item-label"><span>&#128202;</span> Yearly Summary</span>
         </button>
         <button
           className={`sidebar-item ${view.type === "categories" ? "active" : ""}`}
           onClick={() => onSelect({ type: "categories" })}
         >
-          &#127991; Categories
+          <span className="sidebar-item-label"><TagIcon /> Categories</span>
         </button>
       </div>
 

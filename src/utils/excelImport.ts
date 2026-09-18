@@ -70,16 +70,6 @@ function matchCategory(raw: string, categories: Category[]): Category | null {
   );
 }
 
-// ── Skip non-data rows ────────────────────────────────
-function isSkippableRow(row: Record<string, unknown>, keys: string[]): boolean {
-  // Row is empty
-  if (keys.every((k) => !row[k] || String(row[k]).trim() === "")) return true;
-  // Row looks like a header or summary line
-  const first = String(Object.values(row)[0] ?? "").toLowerCase();
-  const skip = ["total", "net", "income", "expense category", "date", "tracker", "summary"];
-  if (skip.some((s) => first.includes(s))) return true;
-  return false;
-}
 
 // ── Find header row and return column map ─────────────
 function findColumns(ws: XLSX.WorkSheet): {

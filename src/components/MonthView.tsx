@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 import type { Category, Transaction } from "../types";
 import { AddTransactionModal } from "./AddTransactionModal";
 import { ConfirmDialog } from "./ConfirmDialog";
+import { exportMonthToExcel } from "../utils/excelExport";
 
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
@@ -21,17 +22,6 @@ const TrashIcon = () => (
   </svg>
 );
 
-const ChevronDown = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="6 9 12 15 18 9"/>
-  </svg>
-);
-
-const ChevronUp = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="18 15 12 9 6 15"/>
-  </svg>
-);
 
 type Props = {
   year: number;
@@ -61,11 +51,10 @@ function getCatColor(catId: string): string {
 }
 
 export function MonthView({ year, month, transactions, categories, onAdd, onUpdate, onDelete }: Props) {
-  const [showAdd, setShowAdd]         = useState(false);
-  const [editing, setEditing]         = useState<Transaction | null>(null);
-  const [deleting, setDeleting]       = useState<Transaction | null>(null);
-  const [search, setSearch]           = useState("");
-  const [showSummary, setShowSummary] = useState(true);
+  const [showAdd, setShowAdd]   = useState(false);
+  const [editing, setEditing]   = useState<Transaction | null>(null);
+  const [deleting, setDeleting] = useState<Transaction | null>(null);
+  const [search, setSearch]     = useState("");
 
   const monthTx = useMemo(() =>
     transactions
@@ -115,7 +104,14 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
           <h1>{MONTHS[month]} {year}</h1>
           <p className="page-sub">{monthTx.length} transaction{monthTx.length !== 1 ? "s" : ""}</p>
         </div>
-        <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Transaction</button>
+        <div style={{ display: "flex", gap: 10 }}>
+          {monthTx.length > 0 && (
+            <button className="btn-outline" onClick={() => exportMonthToExcel(year, month, transactions, categories)}>
+              ⬇ Export
+            </button>
+          )}
+          <button className="btn-primary" onClick={() => setShowAdd(true)}>+ Add Transaction</button>
+        </div>
       </div>
 
       {/* Summary bar */}
@@ -138,7 +134,7 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
         </div>
       </div>
 
-      {/* Search + Table */}
+      {/* Search bar — full width above table+panel */}
       <div className="table-toolbar">
         <div className="search-wrap">
           <input
@@ -153,97 +149,84 @@ export function MonthView({ year, month, transactions, categories, onAdd, onUpda
         </div>
       </div>
 
-      <div className="table-wrapper">
-        <table className="tx-table">
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Description</th>
-              <th>Category</th>
-              <th>Type</th>
-              <th className="text-right">Amount</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr><td colSpan={6} className="empty-row">
-                {monthTx.length === 0 ? "No transactions yet — click '+ Add Transaction' to start" : "No results found"}
-              </td></tr>
-            ) : (
-              filtered.map((t) => {
-                const cat = getCat(t.categoryId);
-                return (
-                  <tr key={t.id} className="tx-row">
-                    <td className="date-cell">{new Date(t.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}</td>
-                    <td className="desc-cell">{t.description || <span className="muted">—</span>}</td>
-                    <td>
-                      <span className="cat-badge">
-                        <span className="cat-dot" style={{ background: getCatColor(t.categoryId) }} />
-                        {cat?.name ?? "—"}
-                      </span>
-                    </td>
-                    <td><span className={`type-badge ${t.type}`}>{t.type === "income" ? "Income" : "Expense"}</span></td>
-                    <td className={`amount-cell text-right ${t.type}`}>
-                      {t.type === "expense" ? "-" : "+"}${fmt(t.amount)}
-                    </td>
-                    <td className="actions-cell">
-                      <button className="action-btn edit" title="Edit" onClick={() => setEditing(t)}><EditIcon /></button>
-                      <button className="action-btn del" title="Delete" onClick={() => setDeleting(t)}><TrashIcon /></button>
-                    </td>
-                  </tr>
-                );
-              })
-            )}
-          </tbody>
-        </table>
+      {/* Table + Category Panel side-by-side */}
+      <div className="month-body">
+        <div className="table-wrapper">
+            <table className="tx-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Description</th>
+                  <th>Category</th>
+                  <th>Type</th>
+                  <th className="text-right">Amount</th>
+                  <th></th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 ? (
+                  <tr><td colSpan={6} className="empty-row">
+                    {monthTx.length === 0 ? "No transactions yet — click '+ Add Transaction' to start" : "No results found"}
+                  </td></tr>
+                ) : (
+                  filtered.map((t) => {
+                    const cat = getCat(t.categoryId);
+                    return (
+                      <tr key={t.id} className="tx-row">
+                        <td className="date-cell">{new Date(t.date).toLocaleDateString("en-CA", { month: "short", day: "numeric" })}</td>
+                        <td className="desc-cell">{t.description || <span className="muted">—</span>}</td>
+                        <td>
+                          <span className="cat-badge">
+                            <span className="cat-dot" style={{ background: getCatColor(t.categoryId) }} />
+                            {cat?.name ?? "—"}
+                          </span>
+                        </td>
+                        <td><span className={`type-badge ${t.type}`}>{t.type === "income" ? "Income" : "Expense"}</span></td>
+                        <td className={`amount-cell text-right ${t.type}`}>
+                          {t.type === "expense" ? "-" : "+"}${fmt(t.amount)}
+                        </td>
+                        <td className="actions-cell">
+                          <button className="action-btn edit" title="Edit" onClick={() => setEditing(t)}><EditIcon /></button>
+                          <button className="action-btn del" title="Delete" onClick={() => setDeleting(t)}><TrashIcon /></button>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+        {/* Category breakdown panel — right side, always visible */}
+        {monthTx.length > 0 && (
+          <div className="cat-panel">
+            {/* Income — compact at top */}
+            <div className="cat-panel-header income">Income</div>
+            {incomeGroups.length === 0
+              ? <p className="cat-breakdown-empty">No income recorded</p>
+              : incomeGroups.map(({ cat, total, count }) => (
+                <div key={cat?.id ?? "unk"} className="cat-breakdown-row">
+                  <span className="cat-dot" style={{ background: getCatColor(cat?.id ?? "") }} />
+                  <span className="cat-breakdown-name">{cat?.name ?? "Unknown"}</span>
+                  {count > 1 && <span className="cat-count">{count}x</span>}
+                  <span className="cat-breakdown-amount income">${fmt(total)}</span>
+                </div>
+              ))
+            }
+
+            {/* Expenses below */}
+            <div className="cat-panel-header expense">Expenses</div>
+            {expenseGroups.map(({ cat, total, count }) => (
+              <div key={cat?.id ?? "unk"} className="cat-breakdown-row">
+                <span className="cat-dot" style={{ background: getCatColor(cat?.id ?? "") }} />
+                <span className="cat-breakdown-name">{cat?.name ?? "Unknown"}</span>
+                {count > 1 && <span className="cat-count">{count}x</span>}
+                <span className="cat-breakdown-amount expense">${fmt(total)}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
-
-      {/* Category breakdown — collapsible, below table, full width */}
-      {monthTx.length > 0 && (
-        <div className="cat-breakdown-section">
-          <button className="cat-breakdown-toggle" onClick={() => setShowSummary((v) => !v)}>
-            <span>Category Breakdown</span>
-            <span className="cat-breakdown-meta">
-              {expenseGroups.length} expense · {incomeGroups.length} income categories
-            </span>
-            <span className="cat-breakdown-chevron">{showSummary ? <ChevronUp /> : <ChevronDown />}</span>
-          </button>
-
-          {showSummary && (
-            <div className="cat-breakdown-grid">
-              {/* Expenses */}
-              <div className="cat-breakdown-col">
-                <div className="cat-breakdown-col-header expense">Expense Categories</div>
-                {expenseGroups.map(({ cat, total, count }) => (
-                  <div key={cat?.id ?? "unk"} className="cat-breakdown-row">
-                    <span className="cat-dot" style={{ background: getCatColor(cat?.id ?? "") }} />
-                    <span className="cat-breakdown-name">{cat?.name ?? "Unknown"}</span>
-                    {count > 1 && <span className="cat-count">{count}x</span>}
-                    <span className="cat-breakdown-amount expense">${fmt(total)}</span>
-                  </div>
-                ))}
-              </div>
-
-              {/* Income */}
-              <div className="cat-breakdown-col">
-                <div className="cat-breakdown-col-header income">Income Categories</div>
-                {incomeGroups.length === 0
-                  ? <p className="cat-breakdown-empty">No income recorded</p>
-                  : incomeGroups.map(({ cat, total, count }) => (
-                    <div key={cat?.id ?? "unk"} className="cat-breakdown-row">
-                      <span className="cat-dot" style={{ background: getCatColor(cat?.id ?? "") }} />
-                      <span className="cat-breakdown-name">{cat?.name ?? "Unknown"}</span>
-                      {count > 1 && <span className="cat-count">{count}x</span>}
-                      <span className="cat-breakdown-amount income">${fmt(total)}</span>
-                    </div>
-                  ))
-                }
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {(showAdd || editing) && (
         <AddTransactionModal
