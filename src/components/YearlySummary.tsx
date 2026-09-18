@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import type { Category, Transaction } from "../types";
+import { exportYearToExcel } from "../utils/excelExport";
 
 const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
@@ -42,10 +43,16 @@ export function YearlySummary({ year, transactions, categories }: Props) {
   return (
     <div className="main-content">
       <div className="page-header">
-        <div>
+        <div className="page-header-left">
           <h1>Yearly Summary — {year}</h1>
           <p className="page-sub">Income vs Expenses by month</p>
         </div>
+        <button
+          className="btn-primary"
+          onClick={() => exportYearToExcel(year, transactions, categories)}
+        >
+          ⬇ Export {year} to Excel
+        </button>
       </div>
 
       <div className="summary-bar">
